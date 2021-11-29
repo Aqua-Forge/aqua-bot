@@ -1,13 +1,5 @@
-import {
-  Client,
-  Intents,
-  TextChannel,
-  DMChannel,
-  PartialDMChannel,
-  NewsChannel,
-  ThreadChannel,
-} from "discord.js";
-import { getFullDate } from "../auxiliary";
+import { Client, Intents, TextChannel, Message } from "discord.js";
+import { generatePresentationText, getFullDate } from "../auxiliary";
 
 const intents = [
   Intents.FLAGS.GUILDS,
@@ -15,47 +7,62 @@ const intents = [
   Intents.FLAGS.GUILD_MESSAGES,
 ];
 
-const cmdPrefix = "$";
-const channelsMap = {
-  logs: "914620820616278016",
-};
+interface BotConfig {
+  token: string;
+  cmdPrefix: string;
+  channelsIds: { [channelName: string]: string };
+}
 
 class Bot {
   public static client: Client;
+  private token: string;
+  private cmdPrefix: string;
+  private channelsIds: { [channelName: string]: string };
+  private presentationText: string;
 
-  constructor(private token: string) {
+  constructor(configs: BotConfig) {
     Bot.client = new Client({ intents });
+
+    this.token = configs.token;
+    this.cmdPrefix = configs.cmdPrefix;
+    this.channelsIds = configs.channelsIds;
+
+    let cmds = {
+      sayhi: "Apresenta o AquaBot e seus comandos.",
+      clear: "Limpa as mensagens do canal.",
+    };
+    this.presentationText = generatePresentationText(cmds);
 
     Bot.client.on("ready", () => {
       if (Bot.client.user) {
         let hello = `${Bot.client.user.tag} ligado em ${getFullDate()}!`;
         console.log(hello);
-        this.sendMessage(hello, channelsMap["logs"]);
+        this.sendMessage(hello, this.channelsIds["logs"]);
       }
     });
 
-    // Comandos
+    // Registrando os comandos do Bot
     Bot.client.on("messageCreate", async (msg) => {
-      // $clear - Apagar mensagens de um canal.
-      if (msg.content.toLowerCase().startsWith(cmdPrefix + "clear")) {
-        this.clear(msg.channel);
-        this.sendMessage(
-          `Mensagens do canal <#${msg.channel.id.toString()}> foram apagadas por ${msg.author.toString()}!`,
-          channelsMap["logs"]
-        );
+      if (msg.content.startsWith(this.cmdPrefix)) {
+        // $clear - Apagar mensagens de um canal.
+        if (msg.content === this.cmdPrefix + "clear") {
+          this.clear(msg);
+          this.sendMessage(
+            `Mensagens do canal <#${msg.channel.id.toString()}> foram apagadas por ${msg.author.toString()}!`,
+            this.channelsIds["logs"]
+          );
+        }
+
+        // $sayhi - Fazer com que o bot se apresente.
+        else if (msg.content === this.cmdPrefix + "sayhi") {
+          this.sendMessage(this.presentationText, msg.channel.id);
+        }
       }
     });
   }
 
-  private async clear(
-    channel:
-      | DMChannel
-      | PartialDMChannel
-      | TextChannel
-      | NewsChannel
-      | ThreadChannel
-  ) {
-    await channel.messages
+  private async clear(msg: Message) {
+    await msg.channel.messages
       .fetch({ limit: 100 })
       .then((messages) => {
         messages.forEach((msg) => {

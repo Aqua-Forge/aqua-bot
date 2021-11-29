@@ -6,4 +6,12 @@ function getFullDate() {
   return dateTime;
 }
 
-export { getFullDate };
+function generatePresentationText(cmds: Object) {
+  var text = `Oi, eu sou o AquaBot! Meus comandos são:\n`;
+  for (var [cmd, desc] of Object.entries(cmds)) {
+    text += "$" + `${cmd} - ${desc}\n`;
+  }
+  return text;
+}
+
+export { getFullDate, generatePresentationText };
