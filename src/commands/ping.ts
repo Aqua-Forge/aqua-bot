@@ -1,9 +1,17 @@
-import Command from "../interfaces/Command";
+import Command, { OptionType } from "../interfaces/Command";
 
 export const ping: Command = {
   name: "ping",
-  description: 'Responde com pong',
+  description: "Responde com pong",
+  options: [
+    {
+      name: "nome",
+      description: "nome da pessoa que vai receber o pong",
+      type: OptionType.String,
+    },
+  ],
   run: async (interaction) => {
-    await interaction.reply("Pong");
+    const nome = interaction.options.getString("nome") || "";
+    await interaction.reply(`Pong ${nome}`);
   },
 };

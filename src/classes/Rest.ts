@@ -1,13 +1,17 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
-import Command from "../interfaces/Command";
+import Command, { Option, OptionType } from "../interfaces/Command";
 
 class Rest {
   private rest: REST;
   private commands: Command[] = [];
 
-  constructor(private token: string, private clientId: string, private guildId: string) {
+  constructor(
+    private token: string,
+    private clientId: string,
+    private guildId: string
+  ) {
     this.rest = new REST({ version: "9" }).setToken(this.token);
   }
 
@@ -18,18 +22,97 @@ class Rest {
   async start() {
     try {
       console.log("Inicializando os comandos de barra...");
-      await this.rest.put(Routes.applicationGuildCommands(this.clientId, this.guildId), {
-        body: this.commands.map((command) => {
-          const data = new SlashCommandBuilder()
-            .setName(command.name.toLowerCase())
-            .setDescription(command.description);
-          return data.toJSON();
-        }),
-      });
+      await this.rest.put(
+        Routes.applicationGuildCommands(this.clientId, this.guildId),
+        {
+          body: this.commands.map((command) => {
+            const data = new SlashCommandBuilder()
+              .setName(command.name.toLowerCase())
+              .setDescription(command.description);
+            const dataWithOptions = this.addFields(data, command.options);
+            return dataWithOptions.toJSON();
+          }),
+        }
+      );
       console.log("Os comandos de barra foram inicializados com sucesso!");
     } catch (error) {
       console.error(error);
     }
+  }
+
+  addFields(data: SlashCommandBuilder, options?: Option[]) {
+    options &&
+      options.forEach((option) => {
+        switch (option.type) {
+          case OptionType.Boolean:
+            data.addBooleanOption((slashOption) => {
+              return slashOption
+                .setName(option.name.toLowerCase())
+                .setDescription(option.description)
+                .setRequired(option.required || false);
+            });
+            break;
+          case OptionType.Channel:
+            data.addChannelOption((slashOption) => {
+              return slashOption
+                .setName(option.name.toLowerCase())
+                .setDescription(option.description)
+                .setRequired(option.required || false);
+            });
+            break;
+          case OptionType.Integer:
+            data.addIntegerOption((slashOption) => {
+              const newSlashOption = slashOption
+                .setName(option.name.toLowerCase())
+                .setDescription(option.description)
+                .setRequired(option.required || false);
+              option.choices &&
+                option.choices.forEach((choice) =>
+                  newSlashOption.addChoice(choice.name, parseInt(choice.value))
+                );
+              return newSlashOption;
+            });
+            break;
+          case OptionType.Mention:
+            data.addMentionableOption((slashOption) => {
+              return slashOption
+                .setName(option.name.toLowerCase())
+                .setDescription(option.description)
+                .setRequired(option.required || false);
+            });
+            break;
+          case OptionType.Role:
+            data.addRoleOption((slashOption) => {
+              return slashOption
+                .setName(option.name.toLowerCase())
+                .setDescription(option.description)
+                .setRequired(option.required || false);
+            });
+            break;
+          case OptionType.String:
+            data.addStringOption((slashOption) => {
+              const newSlashOption = slashOption
+                .setName(option.name.toLowerCase())
+                .setDescription(option.description)
+                .setRequired(option.required || false);
+              option.choices &&
+                option.choices.forEach((choice) =>
+                  newSlashOption.addChoice(choice.name, choice.value)
+                );
+              return newSlashOption;
+            });
+            break;
+          case OptionType.User:
+            data.addUserOption((slashOption) => {
+              return slashOption
+                .setName(option.name.toLowerCase())
+                .setDescription(option.description)
+                .setRequired(option.required || false);
+            });
+            break;
+        }
+      });
+    return data;
   }
 }
 
