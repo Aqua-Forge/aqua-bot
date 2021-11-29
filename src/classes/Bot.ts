@@ -1,5 +1,5 @@
 import { Client, Intents, TextChannel, Message } from "discord.js";
-import { generatePresentationText, getFullDate } from "../auxiliary";
+import { generatePresentationText, getFullDate, sleep } from "../auxiliary";
 
 const intents = [
   Intents.FLAGS.GUILDS,
@@ -46,11 +46,13 @@ class Bot {
       if (msg.content.startsWith(this.cmdPrefix)) {
         // $clear - Apagar mensagens de um canal.
         if (msg.content === this.cmdPrefix + "clear") {
-          this.clear(msg);
-          this.sendMessage(
-            `Mensagens do canal <#${msg.channel.id.toString()}> foram apagadas por ${msg.author.toString()}!`,
-            this.channelsIds["logs"]
-          );
+          this.checkPermission(msg, ["manager", "admin"], () => {
+            this.clear(msg);
+            this.sendMessage(
+              `Mensagens do canal <#${msg.channel.id.toString()}> foram apagadas por ${msg.author.toString()}!`,
+              this.channelsIds["logs"]
+            );
+          });
         }
 
         // $sayhi - Fazer com que o bot se apresente.
@@ -76,6 +78,27 @@ class Bot {
     Bot.client.channels.fetch(channelId).then((channel) => {
       (channel as TextChannel).send(msg);
     });
+  }
+
+  private async checkPermission(
+    msg: Message,
+    roles: string[],
+    onSuccess: Function
+  ) {
+    if (msg.member.roles.cache.some((role) => roles.includes(role.name))) {
+      onSuccess();
+    } else {
+      msg.delete();
+      let response = await msg.channel.send(
+        "Você não tem permissão para usar este comando!"
+      );
+      await sleep(5);
+      response.delete();
+      this.sendMessage(
+        `O usuário ${msg.author.toString()} tentou usar o comando ${msg.toString()}!`,
+        this.channelsIds["logs"]
+      );
+    }
   }
 
   public start() {
