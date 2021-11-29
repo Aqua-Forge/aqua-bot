@@ -8,7 +8,9 @@ Bot for discord automations
 
 - [Requirements](#requirements)
 - [Installing](#installing)
-- [Usage](#usage)
+- [Configuration](#configuration)
+  - [Authorizing application (slash) commands:](#authorizing-application-slash-commands)
+  - [Making the bot online:](#making-the-bot-online)
 
 ---
 
@@ -27,9 +29,18 @@ $ npm install
 
 ---
 
-## Usage
+## Configuration
 
-Making the bot online:
+### Authorizing application (slash) commands:
+
+1. Go to https://discord.com/developers/applications
+2. Select your application
+3. In "OAuth2" section select "URL Generator"
+4. Mark "applications.commands"
+5. Copy the generated URL and paste it into a new tab
+6. Authorize your application to use slash commands
+
+### Making the bot online:
 
 ```shell
 $ npm start

@@ -1,5 +1,5 @@
 import { Client, Intents, TextChannel, Message } from "discord.js";
-import { generatePresentationText, getFullDate, sleep } from "../auxiliary";
+import { getFullDate, sleep } from "../auxiliary";
 
 const intents = [
   Intents.FLAGS.GUILDS,
@@ -7,31 +7,15 @@ const intents = [
   Intents.FLAGS.GUILD_MESSAGES,
 ];
 
-interface BotConfig {
-  token: string;
-  cmdPrefix: string;
-  channelsIds: { [channelName: string]: string };
-}
-
 class Bot {
   public static client: Client;
-  private token: string;
-  private cmdPrefix: string;
-  private channelsIds: { [channelName: string]: string };
-  private presentationText: string;
+  private cmdPrefix: string = "$";
+  private channelsIds: { [channelName: string]: string } = {
+    logs: "914620820616278016",
+  };
 
-  constructor(configs: BotConfig) {
+  constructor(private token: string) {
     Bot.client = new Client({ intents });
-
-    this.token = configs.token;
-    this.cmdPrefix = configs.cmdPrefix;
-    this.channelsIds = configs.channelsIds;
-
-    let cmds = {
-      sayhi: "Apresenta o AquaBot e seus comandos.",
-      clear: "Limpa as mensagens do canal.",
-    };
-    this.presentationText = generatePresentationText(cmds);
 
     Bot.client.on("ready", () => {
       if (Bot.client.user) {
@@ -41,7 +25,7 @@ class Bot {
       }
     });
 
-    // Registrando os comandos do Bot
+    // Registrando os comandos admin do Bot
     Bot.client.on("messageCreate", async (msg) => {
       if (msg.content.startsWith(this.cmdPrefix)) {
         // $clear - Apagar mensagens de um canal.
@@ -57,7 +41,10 @@ class Bot {
 
         // $sayhi - Fazer com que o bot se apresente.
         else if (msg.content === this.cmdPrefix + "sayhi") {
-          this.sendMessage(this.presentationText, msg.channel.id);
+          this.sendMessage(
+            "Oi, eu sou o AquaBot! Digite /comandos para ver meus comandos!",
+            msg.channel.id
+          );
         }
       }
     });
