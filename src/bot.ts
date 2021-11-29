@@ -7,16 +7,8 @@ import CommandListener from "./classes/CommandListener";
 config();
 
 const init = async () => {
-  if (!process.env.TOKEN) {
-    console.error("O Token do BOT não foi encontrado!");
-    return;
-  }
-  if (!process.env.CLIENT_ID) {
-    console.error("O Client ID da Aplicação do Discord não foi encontrado!");
-    return;
-  }
-  if (!process.env.GUILD_ID) {
-    console.error("O ID do servidor não foi encontrado!");
+  if (!process.env.TOKEN || !process.env.CLIENT_ID || !process.env.GUILD_ID) {
+    console.error("Variável(is) de ambiente faltando!");
     return;
   }
 
