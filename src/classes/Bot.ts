@@ -1,4 +1,10 @@
-import { Client, Intents, TextChannel, Message } from "discord.js";
+import {
+  Client,
+  Intents,
+  TextChannel,
+  Message,
+  ApplicationCommandPermissionData,
+} from "discord.js";
 import { getFullDate, sleep } from "../auxiliary";
 
 const intents = [
@@ -14,11 +20,12 @@ class Bot {
     logs: "914620820616278016",
   };
 
-  constructor(private token: string) {
+  constructor(private token: string, private guildId: string) {
     Bot.client = new Client({ intents });
 
-    Bot.client.on("ready", () => {
+    Bot.client.on("ready", async () => {
       if (Bot.client.user) {
+        await this.givePermissionsToSlashCommands();
         let hello = `${Bot.client.user.tag} ligado em ${getFullDate()}!`;
         console.log(hello);
         this.sendMessage(hello, this.channelsIds["logs"]);
@@ -86,6 +93,26 @@ class Bot {
         this.channelsIds["logs"]
       );
     }
+  }
+
+  private async givePermissionsToSlashCommands() {
+    let guild = Bot.client.guilds.cache.get(this.guildId);
+
+    const permissions: ApplicationCommandPermissionData[] = [
+      {
+        id: guild.roles.everyone.id,
+        type: "ROLE",
+        permission: true,
+      },
+    ];
+
+    let commandsList = await guild.commands.fetch();
+    commandsList.forEach((slashCommand) => {
+      // console.log(`Alterando permissão do comando ${slashCommand.name}`);
+      slashCommand.permissions.add({ permissions });
+    });
+
+    console.log(`Permissões de comandos slash configuradas!`);
   }
 
   public start() {

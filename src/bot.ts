@@ -12,7 +12,7 @@ const init = async () => {
     return;
   }
 
-  const bot = new Bot(process.env.TOKEN);
+  const bot = new Bot(process.env.TOKEN, process.env.GUILD_ID);
   const rest = new Rest(process.env.TOKEN, process.env.CLIENT_ID, process.env.GUILD_ID);
   const cmdListener = new CommandListener(commands);
 
